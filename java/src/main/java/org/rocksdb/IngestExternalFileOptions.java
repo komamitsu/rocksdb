@@ -20,12 +20,13 @@ public class IngestExternalFileOptions extends RocksObject {
    * @param snapshotConsistency {@link #setSnapshotConsistency(boolean)}
    * @param allowGlobalSeqNo {@link #setAllowGlobalSeqNo(boolean)}
    * @param allowBlockingFlush {@link #setAllowBlockingFlush(boolean)}
+   * @param allowIngestBehind {@link #setAllowIngestBehind(boolean)}
    */
   public IngestExternalFileOptions(final boolean moveFiles,
       final boolean snapshotConsistency, final boolean allowGlobalSeqNo,
-      final boolean allowBlockingFlush) {
+      final boolean allowBlockingFlush, final boolean allowIngestBehind) {
     super(newIngestExternalFileOptions(moveFiles, snapshotConsistency,
-        allowGlobalSeqNo, allowBlockingFlush));
+        allowGlobalSeqNo, allowBlockingFlush, allowIngestBehind));
   }
 
   /**
@@ -106,10 +107,43 @@ public class IngestExternalFileOptions extends RocksObject {
     setAllowBlockingFlush(nativeHandle_, allowBlockingFlush);
   }
 
+  /**
+   * Set to true if you would like duplicate keys in the file being ingested
+   * to be skipped rather than overwriting existing data under that key.
+   * Usecase: back-fill of some historical data in the database without
+   * over-writing existing newer version of data.
+   * This option could only be used if the DB has been running
+   * with allow_ingest_behind=true since the dawn of time.
+   * All files will be ingested at the bottommost level with seqno=0.
+   *
+   * // FIXME
+   * @return true if xxxx may occur
+   */
+  public boolean allowIngestBehind() {
+    return allowIngestBehind(nativeHandle_);
+  }
+
+  /**
+   * Set to true if you would like duplicate keys in the file being ingested
+   * to be skipped rather than overwriting existing data under that key.
+   * Usecase: back-fill of some historical data in the database without
+   * over-writing existing newer version of data.
+   * This option could only be used if the DB has been running
+   * with allow_ingest_behind=true since the dawn of time.
+   * All files will be ingested at the bottommost level with seqno=0.
+   *
+   * // FIXME
+   * @param allowIngestBehind true if xxxx are allowed
+   */
+  public void setAllowIngestBehind(final boolean allowIngestBehind) {
+    setAllowIngestBehind(nativeHandle_, allowIngestBehind);
+  }
+
   private native static long newIngestExternalFileOptions();
   private native static long newIngestExternalFileOptions(
       final boolean moveFiles, final boolean snapshotConsistency,
-      final boolean allowGlobalSeqNo, final boolean allowBlockingFlush);
+      final boolean allowGlobalSeqNo, final boolean allowBlockingFlush,
+      final boolean allowIngestBehind);
   private native boolean moveFiles(final long handle);
   private native void setMoveFiles(final long handle, final boolean move_files);
   private native boolean snapshotConsistency(final long handle);
@@ -121,5 +155,8 @@ public class IngestExternalFileOptions extends RocksObject {
   private native boolean allowBlockingFlush(final long handle);
   private native void setAllowBlockingFlush(final long handle,
       final boolean allowBlockingFlush);
+  private native boolean allowIngestBehind(final long handle);
+  private native void setAllowIngestBehind(final long handle,
+      final boolean allowIngestBehind);
   @Override protected final native void disposeInternal(final long handle);
 }
